@@ -3,7 +3,7 @@
 #include <util/delay.h>
 #include <avr/interrupt.h>
 
-#define MAXV ((int) (4.0/ 5.0 * 0x3FF))
+#define MAXV ((uint16_t) (4.0/ 5.0 * 0x3FF))
 
 int main (void)
 {
