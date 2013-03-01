@@ -1,83 +1,51 @@
-# AVR Makefile
-# #####################################
-#
-# Part of the uCtools project
-# uctools.github.com
-#
-#######################################
-# user configuration:
-#######################################
-# TARGET: name of the output file
-TARGET = main
-# MCU: part number to build for
-MCU = atmega16m1
-# SOURCES: list of input source sources
-SOURCES = main.c
-# OUTDIR: directory to use for output
-OUTDIR = build
-# PROGRAMMER: name of programmer
-PROGRAMMER = dragon_isp
-# PORT: location of programmer
-PORT = usb
-# define flags
-CFLAGS = -mmcu=$(MCU) -g -Os -Wall -Wunused
-ASFLAGS = -mmcu=$(MCU) -x assembler-with-cpp -Wa,-gstabs
-LDFLAGS = -mmcu=$(MCU) -Wl,-Map=$(OUTDIR)/$(TARGET).map
-AVRDUDE_FLAGS = -p $(MCU) -c $(PROGRAMMER) -P $(PORT)
-#######################################
-# end of user configuration
-#######################################
-#
-#######################################
-# binaries
-#######################################
-CC      = avr-gcc
-LD      = avr-ld
-AR      = avr-ar
-AS      = avr-gcc
-GASP    = avr-gasp
-NM      = avr-nm
-OBJCOPY = avr-objcopy
-RM      = rm -f
-MKDIR	= mkdir -p
-AVRDUDE = avrdude
-#######################################
+#define F_CPU 1000000
+#include <avr/io.h>
+#include <util/delay.h>
+#include <avr/interrupt.h>
 
-# file that includes all dependancies
-DEPEND = $(SOURCES:.c=.d)
+#define MAXV ((int) (4.0/ 5.0 * 0x3FF))
 
-# list all object files
-OBJECTS = $(addprefix $(OUTDIR)/,$(SOURCES:.c=.o))
+int main (void)
+{
+    //Enable ADC, set prescalar to 128 (slow down ADC clock)
+    ADCSRA |= _BV(ADEN) | _BV(ADPS2) | _BV(ADPS1) | _BV(ADPS0);
+    //Enable internal reference voltage
+    ADCSRB &= _BV(AREFEN);
+    //Set internal reference voltage as AVcc
+    ADMUX |= _BV(REFS0);
 
-# default: build all
-all: $(OUTDIR)/$(TARGET).elf $(OUTDIR)/$(TARGET).hex $(OUTDIR)/$(TARGET).srec
+    //ADC0 is pin 11
+    uint8_t ch = 0;
+    //the low 4 bits of ADMUX select the ADC channel
+    ADMUX |= ch;
 
-$(OUTDIR)/%.srec: $(OUTDIR)/%.elf
-	$(OBJCOPY) -j .text -j .data -O srec $< $@
+    // Set PD4 to input
+    DDRD &= ~(_BV(DDD4));
+    // Set PB1 to output
+    DDRB |= 0xFF;
+    PORTB |= _BV(PB7);
 
-$(OUTDIR)/%.elf: $(OBJECTS)
-	$(CC) $(OBJECTS) $(LDFLAGS) $(LIBS) -o $@
 
-$(OUTDIR)/%.hex: $(OUTDIR)/%.elf
-	$(OBJCOPY) -O ihex -R .eeprom $< $@
+    //Loop Begins
+    for (;;) {
+        /* toggle PORTB.2 pins */
+        //PORTB ^= 0xFF;
 
-$(OUTDIR)/%.o: src/%.c | $(OUTDIR)
-	$(CC) -c $(CFLAGS) -o $@ $<
+        //Read pin 11 (set by ch above)
+        ADCSRA |=  _BV(ADSC);
+        while(bit_is_set(ADCSRA, ADSC));
 
-%.lst: %.c
-	$(CC) -c $(ASFLAGS) -Wa,-anlhd $< > $@
+        //ADC is a macro to combine ADCL and ADCH
+        if (ADC >= MAXV)
+          PORTB |= _BV(PB1); //All on
+        else
+          PORTB &= ~(_BV(PB1)); //All off
 
-# create the output directory
-$(OUTDIR):
-	$(MKDIR) $(OUTDIR)
+        _delay_ms(5);
 
-# download to mcu flash
-flash: $(OUTDIR)/$(TARGET).hex
-	$(AVRDUDE) $(AVRDUDE_FLAGS) -U flash:w:$<
+    }
 
-# verify mcu flash
-verify: $(OUTDIR)/$(TARGET).hex
-	$(AVRDUDE) $(AVRDUDE_FLAGS) -U flash:v:$<
+    return 1;
 
-clean:
-	-$(RM) $(OUTDIR)/*
+
+}
