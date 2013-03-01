@@ -19,8 +19,6 @@ int main (void)
     //the low 4 bits of ADMUX select the ADC channel
     ADMUX |= ch;
 
-    // Set PD4 to input
-    DDRD &= ~(_BV(DDD4));
     // Set PB1 to output
     DDRB |= 0xFF;
     PORTB |= _BV(PB7);
