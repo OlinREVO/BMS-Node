@@ -3,8 +3,8 @@
 #include <util/delay.h>
 #include <avr/interrupt.h>
 
-#define MAXV ((uint16_t) (4.0/ 5.0 * 0x3FF))
-
+#define MAXV ((int) (3.7/ 5.0 * 0x3FF))
+#define OVER_VOLTAGE_LED _BV(PB7) //Gets turned on, stays on
 int main (void)
 {
     //Enable ADC, set prescalar to 128 (slow down ADC clock)
@@ -14,36 +14,37 @@ int main (void)
     //Set internal reference voltage as AVcc
     ADMUX |= _BV(REFS0);
 
-    //ADC0 is pin 11
-    uint8_t ch = 0;
-    //the low 4 bits of ADMUX select the ADC channel
-    ADMUX |= ch;
-
-    // Set PB1 to output
+    // Set all of PORTB to output low
     DDRB |= 0xFF;
-    PORTB |= _BV(PB7);
+    PORTB &= ~0x00;
+    PORTB |= _BV(PB6);
 
-
+    uint8_t ch; //Selects ADC Channel and PORTB write output
     //Loop Begins
     for (;;) {
-        /* toggle PORTB.2 pins */
-        //PORTB ^= 0xFF;
+        //Check each of the 4 cells
+        for (ch = 0; ch < 4; ch++) {
 
-        //Read pin 11 (set by ch above)
-        ADCSRA |=  _BV(ADSC);
-        while(bit_is_set(ADCSRA, ADSC));
+            //the low 4 bits of ADMUX select the ADC channel
+            ADMUX |= ch;
+            //Wait for ADC reading
+            ADCSRA |=  _BV(ADSC);
+            while(bit_is_set(ADCSRA, ADSC));
 
-        //ADC is a macro to combine ADCL and ADCH
-        if (ADC >= MAXV)
-          PORTB |= _BV(PB1); //All on
-        else
-          PORTB &= ~(_BV(PB1)); //All off
-
-        _delay_ms(5);
+            //ADC is a macro to combine ADCL and ADCH
+            //ch selects bits of PORTB (0 - 3)
+            if (ADC >= MAXV) {
+                PORTB |= (1 << ch);
+                PORTB |= OVER_VOLTAGE_LED;
+            }
+            else {
+                PORTB &= ~(1 << ch);
+            }
+            _delay_ms(1);
+        }
 
     }
 
     return 1;
-
-
 }
+
