@@ -12,7 +12,7 @@ TARGET = main
 # MCU: part number to build for
 MCU = atmega16m1
 # SOURCES: list of input source sources
-SOURCES = main.c
+SOURCES = main.c 
 # OUTDIR: directory to use for output
 OUTDIR = build
 # PROGRAMMER: name of programmer
@@ -20,10 +20,10 @@ PROGRAMMER = avrispmkii
 # PORT: location of programmer
 PORT = usb
 # define flags
-CFLAGS = -mmcu=$(MCU) -g -Os -Wall -Wunused
+CFLAGS = -mmcu=$(MCU) -g -Os -Wextra -pedantic -Wall -Wunused
 ASFLAGS = -mmcu=$(MCU) -x assembler-with-cpp -Wa,-gstabs
 LDFLAGS = -mmcu=$(MCU) -Wl,-Map=$(OUTDIR)/$(TARGET).map
-AVRDUDE_FLAGS = -p $(MCU) -B 100 -c $(PROGRAMMER) -P $(PORT)
+AVRDUDE_FLAGS = -p $(MCU) -c $(PROGRAMMER) -P $(PORT)
 #######################################
 # end of user configuration
 #######################################

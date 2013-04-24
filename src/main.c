@@ -1,27 +1,48 @@
+#define F_IO 1000000
 #define F_CPU 1000000
-#include <avr/io.h>
-#include <util/delay.h>
-#include <avr/interrupt.h>
 
+#include <avr/io.h>
+#include <avr/interrupt.h>
+//#include <math.h>
+#include <util/delay.h>
+//#include <stdint.h>
+//#include <inttypes.h>
 #define MAXV ((int) (3.7/ 5.0 * 0x3FF))
 #define OVER_VOLTAGE_LED _BV(PB7) //Gets turned on, stays on
-int main (void)
-{
+
+
+void chip_init () {
     //Enable ADC, set prescalar to 128 (slow down ADC clock)
-    ADCSRA |= _BV(ADEN) | _BV(ADPS2) | _BV(ADPS1) | _BV(ADPS0);
+    //ADCSRA |= _BV(ADEN) | _BV(ADPS2) | _BV(ADPS1) | _BV(ADPS0);
     //Enable internal reference voltage
-    ADCSRB &= _BV(AREFEN);
+    //ADCSRB &= _BV(AREFEN);
     //Set internal reference voltage as AVcc
-    ADMUX |= _BV(REFS0);
+    //ADMUX |= _BV(REFS0);
 
-    // Set all of PORTB to output low
+    // Set all of PORTB to output
     DDRB |= 0xFF;
-    PORTB &= ~0x00;
-    PORTB |= _BV(PB6);
+    PORTB |= 0xFF;//_BV(PB6);
+    //PORTB = 0b00000011;
+}
 
-    uint8_t ch; //Selects ADC Channel and PORTB write output
+int main ()
+{
+
+    uint8_t ch;
+    chip_init();
+
+
+    ch = 0x01; //Selects ADC Channel and PORTB write output
     //Loop Begins
+    _delay_ms(10);
     for (;;) {
+        ch++;
+        PORTB &= 0x00;
+        PORTB |=(uint8_t) (ch);
+        _delay_ms(100);
+    }
+
+   /* for (;;) {
         //Check each of the 4 cells
         for (ch = 0; ch < 4; ch++) {
 
@@ -38,13 +59,14 @@ int main (void)
                 PORTB |= OVER_VOLTAGE_LED;
             }
             else {
-                PORTB &= ~(1 << ch);
+                PORTB = PORTB;
+                //PORTB &= ~(1 << ch);
             }
             _delay_ms(1);
         }
 
     }
 
-    return 1;
+    return 1;*/
 }
 
