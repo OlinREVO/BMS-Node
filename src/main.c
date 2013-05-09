@@ -7,46 +7,46 @@
 #include <util/delay.h>
 //#include <stdint.h>
 //#include <inttypes.h>
-#define MAXV ((int) (3.7/ 5.0 * 0x3FF))
-#define OVER_VOLTAGE_LED _BV(PB7) //Gets turned on, stays on
+#define MAXV ((int) (3.6/ 5.0 * 0x3FF))
+#define OVER_VOLTAGE_LED (_BV(PB6) | _BV(PB7)) //Gets turned on, stays on
 
 
 void chip_init () {
     //Enable ADC, set prescalar to 128 (slow down ADC clock)
-    //ADCSRA |= _BV(ADEN) | _BV(ADPS2) | _BV(ADPS1) | _BV(ADPS0);
+    ADCSRA |= _BV(ADEN) | _BV(ADPS2) | _BV(ADPS1) | _BV(ADPS0);
     //Enable internal reference voltage
-    //ADCSRB &= _BV(AREFEN);
+    ADCSRB &= _BV(AREFEN);
     //Set internal reference voltage as AVcc
-    //ADMUX |= _BV(REFS0);
+    ADMUX |= _BV(REFS0);
 
-    // Set all of PORTB to output
+    // Set all of PORTB to output low
     DDRB |= 0xFF;
-    PORTB |= 0xFF;//_BV(PB6);
-    //PORTB = 0b00000011;
+    PORTB = 0x00;
 }
 
 int main ()
 {
 
-    uint8_t ch;
+    uint8_t ch = 0; //Selects ADC Channel and PORTB write output
+    int counter = 0;
     chip_init();
 
 
-    ch = 0x01; //Selects ADC Channel and PORTB write output
     //Loop Begins
     _delay_ms(10);
-    for (;;) {
+    /*for (;;) {
         ch++;
         PORTB &= 0x00;
         PORTB |=(uint8_t) (ch);
         _delay_ms(100);
-    }
+    }*/
 
-   /* for (;;) {
+   for (;;) {
         //Check each of the 4 cells
         for (ch = 0; ch < 4; ch++) {
 
             //the low 4 bits of ADMUX select the ADC channel
+            ADMUX &= 0xF8; //Reset low 4 bits
             ADMUX |= ch;
             //Wait for ADC reading
             ADCSRA |=  _BV(ADSC);
@@ -59,14 +59,19 @@ int main ()
                 PORTB |= OVER_VOLTAGE_LED;
             }
             else {
-                PORTB = PORTB;
-                //PORTB &= ~(1 << ch);
+                PORTB &= ~(1 << ch);
             }
-            _delay_ms(1);
+
+            counter++;
+            if (counter == 10000) { //Every ~20 seconds?
+              counter = 0;
+              PORTB &= ~OVER_VOLTAGE_LED;
+
+            }
         }
 
     }
 
-    return 1;*/
+    return 1;
 }
 
