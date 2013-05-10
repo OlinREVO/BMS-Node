@@ -7,7 +7,7 @@
 #include <util/delay.h>
 //#include <stdint.h>
 //#include <inttypes.h>
-#define MAXV ((int) (3.6/ 5.0 * 0x3FF))
+#define MAXV ((int) (3.5/ 5.0 * 0x3FF))
 #define OVER_VOLTAGE_LED (_BV(PB6) | _BV(PB7)) //Gets turned on, stays on
 
 
