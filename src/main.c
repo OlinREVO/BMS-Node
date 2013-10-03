@@ -4,6 +4,8 @@
 #include <avr/interrupt.h>
 
 #define MAXV ((int) (3.7/ 5.0 * 0x3FF))
+#define MINV ((int) (2.7/ 5.0 * 0x3FF))
+
 #define OVER_VOLTAGE_LED _BV(PB7) //Gets turned on, stays on
 int main (void)
 {
@@ -36,6 +38,12 @@ int main (void)
             if (ADC >= MAXV) {
                 PORTB |= (1 << ch);
                 PORTB |= OVER_VOLTAGE_LED;
+                sendCANmsg(0,4,'0',1);
+            }
+            else if (ADC <= MINV){
+                //Sending low voltage signal over CAN
+                //int sendCANmsg(int destID, int msgID, char msg[], int msgLen);
+                sendCANmsg(0,3,'0',1);
             }
             else {
                 PORTB &= ~(1 << ch);
@@ -46,5 +54,9 @@ int main (void)
     }
 
     return 1;
+}
+
+int sendCANmsg(int destID, int msgID, char msg[], int msgLen) {
+
 }
 
