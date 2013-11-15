@@ -9,8 +9,7 @@
 //int sendCANmsg(int destID, int msgID, char msg[], int msgLen);
 
 #define OVER_VOLTAGE_LED _BV(PB7) //Gets turned on, stays on
-int main (void)
-{
+int main (void) {
     //Enable ADC, set prescalar to 128 (slow down ADC clock)
     ADCSRA |= _BV(ADEN) | _BV(ADPS2) | _BV(ADPS1) | _BV(ADPS0);
     //Enable internal reference voltage
@@ -51,9 +50,7 @@ int main (void)
             }
             _delay_ms(1);
         }
-
     }
-
     return 1;
 }
 
