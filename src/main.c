@@ -34,6 +34,8 @@ int main (void) {
         //Check each of the 4 cells
         for (ch = 0; ch < 4; ch++) {
 
+            //Reset the ADMUX channel select bits (lowest 5)
+            ADMUX &= ~(0x1F);
             //the low 4 bits of ADMUX select the ADC channel
             ADMUX |= inputs[ch];
             //Wait for ADC reading
