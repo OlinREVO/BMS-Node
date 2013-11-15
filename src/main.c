@@ -35,13 +35,15 @@ int main (void) {
             while(bit_is_set(ADCSRA, ADSC));
 
             //ADC is a macro to combine ADCL and ADCH
+            uint16_t voltage = ADC;
+
             //ch selects bits of PORTB (0 - 3)
-            if (ADC >= MAXV) {
+            if (voltage >= MAXV) {
                 PORTB |= (1 << ch);
                 PORTB |= OVER_VOLTAGE_LED;
                 sendCANmsg(NODE_watchdog,MSG_shunting,'0',1);
             }
-            else if (ADC <= MINV){
+            else if (voltage <= MINV){
                 //Sending low voltage signal over CAN
                 sendCANmsg(NODE_watchdog,MSG_voltagelow,'0',1);
             }
