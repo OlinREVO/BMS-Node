@@ -6,9 +6,7 @@
 #define MAXV ((int) (3.7/ 5.0 * 0x3FF))
 #define MINV ((int) (2.7/ 5.0 * 0x3FF))
 
-//int sendCANmsg(int destID, int msgID, char msg[], int msgLen);
-
-#define OVER_VOLTAGE_LED _BV(PB7) //Gets turned on, stays on
+int sendCANmsg(int destID, int msgID, char msg[], int msgLen);
 
 // inputs determines which ADC to use to read cell voltage
 uint8_t inputs[] = { 0x01, 0x02, 0x03, 0x04 };
@@ -23,10 +21,11 @@ int main (void) {
     //Set internal reference voltage as AVcc
     ADMUX |= _BV(REFS0);
 
-    // Set all of PORTB to output low
-    DDRB |= 0xFF;
-    PORTB &= ~0x00;
-    PORTB |= _BV(PB6);
+    // Set all of PORTB (except PB7 - reading from cell) to output low
+    DDRB = 0x7F;
+    PORTB &= 0x80;
+
+    DDRD = 0x00;
 
     uint8_t ch; //Selects ADC Channel and PORTB write output
     //Loop Begins
@@ -47,7 +46,6 @@ int main (void) {
 
             if (voltage >= MAXV){
                 PORTB |= outputs[ch];
-                PORTB |= OVER_VOLTAGE_LED;
                 sendCANmsg(NODE_watchdog,MSG_shunting,'0',1);
             }
             else if (voltage <= MINV) {
