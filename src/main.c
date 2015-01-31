@@ -13,6 +13,9 @@ uint8_t inputs[] = { 0x06, 0x05, 0x03, 0x04, 0x01, 0x02};
 // outputs determines which pin in PORTB to use to shunt the cell
 uint8_t outputs[] = { _BV(PD1), _BV(PC0), _BV(PD0), _BV(PB3), _BV(PB4), _BV(PC7)};
 
+volatile uint32_t millis = 0; //Accurate to within ~5% for RC oscillator
+volatile uint8_t timer1_counter = 0;
+
 void init_io_pins() {
     // Set all of PORTB (except PB7 - reading from cell) to output low
     DDRB = 0x7F;
@@ -58,15 +61,37 @@ uint16_t read_channel(uint8_t channel) {
   return ADC;
 }
 
+void init_millis() {
+    TCCR1B |= (_BV(WGM12) | _BV(CS10));
+    TIMSK1 |= (1<<OCIE1A);
+    OCR1A = 248;
+}
+
+ISR(TIMER1_COMPA_vect){
+    timer1_counter++;
+    if (timer1_counter >= 4) {
+      millis++;
+      /*PORTB ^= _BV(PB1);*/
+      timer1_counter = 0;
+    }
+}
+
 int main (void) {
     init_io_pins();
+    init_millis();
     initADC();
     initCAN(NODE_bms);
 
     uint8_t ch; //Selects ADC Channel and PORTB write output
     uint8_t msg[1];
+    uint32_t old_millis = 0;
+
     //Loop Begins
     for (;;) {
+        if ((uint32_t)(millis - old_millis) > (uint32_t) 499) {
+            PORTB ^= _BV(PB1);
+            old_millis = millis;
+        }
         //Check each of the 6 cells
         for (ch = 0; ch < 6; ch++) {
 
