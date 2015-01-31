@@ -44,6 +44,19 @@ void initADC() {
     //Set internal reference voltage as AVcc
     ADMUX |= _BV(REFS0);
 }
+//
+uint16_t read_channel(uint8_t channel) {
+  //Reset the ADMUX channel select bits (lowest 5)
+  ADMUX &= ~(0x1F);
+  //the low 4 bits of ADMUX select the ADC channel
+  ADMUX |= inputs[channel];
+  //Wait for ADC reading
+  ADCSRA |=  _BV(ADSC);
+  while(bit_is_set(ADCSRA, ADSC));
+
+  //ADC is a macro to combine ADCL and ADCH
+  return ADC;
+}
 
 int main (void) {
     init_io_pins();
@@ -57,16 +70,7 @@ int main (void) {
         //Check each of the 6 cells
         for (ch = 0; ch < 6; ch++) {
 
-            //Reset the ADMUX channel select bits (lowest 5)
-            ADMUX &= ~(0x1F);
-            //the low 4 bits of ADMUX select the ADC channel
-            ADMUX |= inputs[ch];
-            //Wait for ADC reading
-            ADCSRA |=  _BV(ADSC);
-            while(bit_is_set(ADCSRA, ADSC));
-
-            //ADC is a macro to combine ADCL and ADCH
-            uint16_t voltage = ADC;
+            uint16_t voltage = read_channel(ch);
 
             if (voltage >= MAXV){
                 if (ch == 0 || ch == 2) { PORTD |= outputs[ch];}
