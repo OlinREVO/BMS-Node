@@ -107,35 +107,27 @@ int main (void) {
 
     //Loop Begins
     for (;;) {
-        // Let cells settle
-        for (ch = 0; ch < 6; ch++) {
-            if (ch == 0 || ch == 2) { PORTD &= ~outputs[ch];}
-            if (ch == 1 || ch == 5) { PORTC &= ~outputs[ch];}
-            if (ch == 3 || ch == 4) { PORTB &= ~outputs[ch];}
-        }
-        _delay_ms(10);
+        if ((millis - capture_time) > CAPTURE_STEP) {
+            capture_time += CAPTURE_STEP;
+            // Let cells settle
+            for (ch = 0; ch < 6; ch++) {
+                if (ch == 0 || ch == 2) { PORTD &= ~outputs[ch];}
+                if (ch == 1 || ch == 5) { PORTC &= ~outputs[ch];}
+                if (ch == 3 || ch == 4) { PORTB &= ~outputs[ch];}
+            }
+            _delay_ms(10);
 
-        //Check each of the 6 cells
-        for (ch = 0; ch < 6; ch++) {
+            //Check each of the 6 cells
+            for (ch = 0; ch < 6; ch++) {
 
-            uint16_t voltage = read_channel(ch);
+                uint16_t voltage = read_channel(ch);
 
-            if (voltage >= MAXV){
-                shunt[ch] = 1;
-                cell = ch + 1;
-                if (cell >= 4) {
-                    cell++;
-                }
-            } else {
-                shunt[ch] = 0;
-                if (voltage <= MINV) {
-                    cell = ch + 1;
-                    if (cell >= 4) {
-                      cell++;
-                    }
+                if (voltage >= MAXV){
+                    shunt[ch] = 1;
+                } else {
+                    shunt[ch] = 0;
                 }
             }
-            _delay_ms(1);
         }
 
         // Shunt if needed
