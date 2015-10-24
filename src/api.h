@@ -1,5 +1,5 @@
 /* ------------------------------- REVO CAN API -------------------------------
- * 
+ *
  * Author: Derek Redfern, Heather Boortz, Olin College REVO
  * Last modified: Fall 2013
  * Contact: redfern.derek@gmail.com
@@ -42,19 +42,22 @@
 #define NODE_speedometer    ((uint8_t) 0x3)
 #define NODE_halleffect     ((uint8_t) 0x4)
 #define NODE_sdlogger       ((uint8_t) 0x5)
+#define NODE_charger        ((uint8_t) 0x6)
 #define NODE_demoClient     ((uint8_t) 0xA)
 #define NODE_demoServer     ((uint8_t) 0xB)
 #define NODE_demoNode1      ((uint8_t) 0xC)
 #define NODE_demoNode2      ((uint8_t) 0xD)
 #define NODE_demoNode3      ((uint8_t) 0xE)
+#define NODE_ble            ((uint8_t) 0xF)
 
 #define MSG_critical        ((uint8_t) 0x0)
 #define MSG_warning         ((uint8_t) 0x1)
 #define MSG_speed           ((uint8_t) 0x2)
-#define MSG_voltagelow		((uint8_t) 0x3)
-#define MSG_shunting		((uint8_t) 0x4)
+#define MSG_voltagelow      ((uint8_t) 0x3)
+#define MSG_shunting        ((uint8_t) 0x4)
 #define MSG_shutdown        ((uint8_t) 0x5)
 #define MSG_data_other      ((uint8_t) 0x6)
+#define MSG_BMS_info        ((uint8_t) 0x7)
 #define MSG_demoMsg         ((uint8_t) 0xA)
 
 //#define MSG_batteryLevel    3;
