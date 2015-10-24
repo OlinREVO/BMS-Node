@@ -9,20 +9,15 @@
 #define MINV ((uint16_t) (2.7/ 5.0 * 0x3FF))
 
 // inputs determines which ADC to use to read cell voltage
-uint8_t inputs[] = { 0x06, 0x05, 0x03, 0x04, 0x01, 0x02};
-// outputs determines which pin in PORTB to use to shunt the cell
+uint8_t inputs[] = { 0x02, 0x03, 0x05, 0x04, 0x07, 0x06};
+// outputs determines which pin to use to shunt the cell
 uint8_t outputs[] = { _BV(PD1), _BV(PC0), _BV(PD0), _BV(PB3), _BV(PB4), _BV(PC7)};
 
 volatile uint32_t millis = 0; //Accurate to within ~5% for RC oscillator
 volatile uint8_t timer1_counter = 0;
 
 void init_io_pins() {
-    // Set all of PORTB (except PB7 - reading from cell) to output low
-    DDRB = 0x7F;
-    PORTB &= 0x80;
-
     //setting inputs
-    DDRD = 0x00;
     DDRD &= ~(_BV(PD5)); //input 1
     DDRD &= ~(_BV(PD6));
     DDRB &= ~(_BV(PB2));
@@ -31,12 +26,22 @@ void init_io_pins() {
     DDRB &= ~(_BV(PB5));
 
     //setting outputs
+    DDRD |= _BV(PD0);
     DDRD |= _BV(PD1);
     DDRC |= _BV(PC0);
-    DDRD |= _BV(PD0);
     DDRB |= _BV(PB3);
     DDRB |= _BV(PB4);
     DDRC |= _BV(PC7);
+
+    // Don't shunt initially
+    PORTD &= ~(_BV(PD0) | _BV(PD1));
+    PORTC &= ~(_BV(PC0) | _BV(PC7));
+    PORTB &= ~(_BV(PB3) | _BV(PB4));
+
+    //LEDs
+    DDRB |= _BV(PB0);
+    DDRB |= _BV(PB1);
+    DDRD |= _BV(PD7);
 }
 
 void initADC() {
@@ -71,7 +76,6 @@ ISR(TIMER1_COMPA_vect){
     timer1_counter++;
     if (timer1_counter >= 4) {
       millis++;
-      /*PORTB ^= _BV(PB1);*/
       timer1_counter = 0;
     }
 }
