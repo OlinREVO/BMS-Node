@@ -12,7 +12,7 @@ TARGET = main
 # MCU: part number to build for
 MCU = atmega16m1
 # SOURCES: list of input source sources
-SOURCES = main.c api.c
+SOURCES = main.c api.c led.c
 # INC: list of build dependencies
 INC = -Isrc/
 # OUTDIR: directory to use for output
