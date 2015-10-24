@@ -5,8 +5,8 @@
 #include "api.h"
 
 
-#define MAXV ((int) (3.7/ 5.0 * 0x3FF))
-#define MINV ((int) (2.7/ 5.0 * 0x3FF))
+#define MAXV ((uint16_t) (3.5/ 5.0 * 0x3FF))
+#define MINV ((uint16_t) (2.7/ 5.0 * 0x3FF))
 
 // inputs determines which ADC to use to read cell voltage
 uint8_t inputs[] = { 0x06, 0x05, 0x03, 0x04, 0x01, 0x02};
