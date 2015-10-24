@@ -130,18 +130,18 @@ int main (void) {
                     shunt[ch] = 0;
                 }
             }
-        }
 
-        // Shunt if needed
-        for (ch = 0; ch < 6; ch++) {
-            if (shunt[ch] == 1) {
-                if (ch == 0 || ch == 2) { PORTD |= outputs[ch];}
-                if (ch == 1 || ch == 5) { PORTC |= outputs[ch];}
-                if (ch == 3 || ch == 4) { PORTB |= outputs[ch];}
-            } else {
-                if (ch == 0 || ch == 2) { PORTD &= ~outputs[ch];}
-                if (ch == 1 || ch == 5) { PORTC &= ~outputs[ch];}
-                if (ch == 3 || ch == 4) { PORTB &= ~outputs[ch];}
+            // Shunt if needed
+            for (ch = 0; ch < 6; ch++) {
+                if (shunt[ch] == 1) {
+                    if (ch == 0 || ch == 2) { PORTD |= outputs[ch];}
+                    if (ch == 1 || ch == 5) { PORTC |= outputs[ch];}
+                    if (ch == 3 || ch == 4) { PORTB |= outputs[ch];}
+                } else {
+                    if (ch == 0 || ch == 2) { PORTD &= ~outputs[ch];}
+                    if (ch == 1 || ch == 5) { PORTC &= ~outputs[ch];}
+                    if (ch == 3 || ch == 4) { PORTB &= ~outputs[ch];}
+                }
             }
         }
 
