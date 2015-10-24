@@ -13,7 +13,9 @@ uint8_t inputs[] = { 0x02, 0x03, 0x05, 0x04, 0x07, 0x06};
 // outputs determines which pin to use to shunt the cell
 uint8_t outputs[] = { _BV(PD1), _BV(PC0), _BV(PD0), _BV(PB3), _BV(PB4), _BV(PC7)};
 
-volatile uint32_t millis = 0; //Accurate to within ~5% for RC oscillator
+uint8_t shunt[] = { 0, 0, 0, 0, 0, 0 };
+
+volatile uint32_t millis = 0; //Accurate to within ~10% for RC oscillator
 volatile uint8_t timer1_counter = 0;
 
 void init_io_pins() {
@@ -80,6 +82,18 @@ ISR(TIMER1_COMPA_vect){
     }
 }
 
+void blink_on_init() {
+    PORTB |= _BV(PB0);
+    _delay_ms(500);
+    PORTB &= ~_BV(PB0);
+    PORTB |= _BV(PB1);
+    _delay_ms(500);
+    PORTB &= ~_BV(PB1);
+    PORTD |= _BV(PD7);
+    _delay_ms(500);
+    PORTD &= ~_BV(PD7);
+}
+
 int main (void) {
     init_io_pins();
     init_millis();
@@ -87,42 +101,56 @@ int main (void) {
     initCAN(NODE_bms);
 
     uint8_t ch; //Selects ADC Channel and PORTB write output
-    uint8_t msg[1];
-    uint32_t old_millis = 0;
+    uint8_t msg[3];
+
+    blink_on_init();
 
     //Loop Begins
     for (;;) {
-        if ((uint32_t)(millis - old_millis) > (uint32_t) 499) {
-            PORTB ^= _BV(PB1);
-            old_millis = millis;
+        // Let cells settle
+        for (ch = 0; ch < 6; ch++) {
+            if (ch == 0 || ch == 2) { PORTD &= ~outputs[ch];}
+            if (ch == 1 || ch == 5) { PORTC &= ~outputs[ch];}
+            if (ch == 3 || ch == 4) { PORTB &= ~outputs[ch];}
         }
+        _delay_ms(10);
+
         //Check each of the 6 cells
         for (ch = 0; ch < 6; ch++) {
 
             uint16_t voltage = read_channel(ch);
 
             if (voltage >= MAXV){
-                if (ch == 0 || ch == 2) { PORTD |= outputs[ch];}
-                if (ch == 1 || ch == 5) { PORTC |= outputs[ch];}
-                if (ch == 3 || ch == 4) { PORTB |= outputs[ch];}
-                msg[0] = 0;
-                sendCANmsg(NODE_watchdog,MSG_shunting,msg,1);
-            }
-            else if (voltage <= MINV) {
-                if (ch == 0 || ch == 2) { PORTD &= ~outputs[ch];}
-                if (ch == 1 || ch == 5) { PORTC &= ~outputs[ch];}
-                if (ch == 3 || ch == 4) { PORTB &= ~outputs[ch];}
-                //Sending low voltage signal over CAN
-                msg[0] = 0;
-                sendCANmsg(NODE_watchdog,MSG_voltagelow,msg,1);
-            }
-            else {
-                if (ch == 0 || ch == 2) { PORTD &= ~outputs[ch];}
-                if (ch == 1 || ch == 5) { PORTC &= ~outputs[ch];}
-                if (ch == 3 || ch == 4) { PORTB &= ~outputs[ch];}
+                shunt[ch] = 1;
+                cell = ch + 1;
+                if (cell >= 4) {
+                    cell++;
+                }
+            } else {
+                shunt[ch] = 0;
+                if (voltage <= MINV) {
+                    cell = ch + 1;
+                    if (cell >= 4) {
+                      cell++;
+                    }
+                }
             }
             _delay_ms(1);
         }
+
+        // Shunt if needed
+        for (ch = 0; ch < 6; ch++) {
+            if (shunt[ch] == 1) {
+                if (ch == 0 || ch == 2) { PORTD |= outputs[ch];}
+                if (ch == 1 || ch == 5) { PORTC |= outputs[ch];}
+                if (ch == 3 || ch == 4) { PORTB |= outputs[ch];}
+            } else {
+                if (ch == 0 || ch == 2) { PORTD &= ~outputs[ch];}
+                if (ch == 1 || ch == 5) { PORTC &= ~outputs[ch];}
+                if (ch == 3 || ch == 4) { PORTB &= ~outputs[ch];}
+            }
+        }
+        _delay_ms(1000);
     }
     return 1;
 }
