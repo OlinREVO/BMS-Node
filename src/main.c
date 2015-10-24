@@ -18,6 +18,15 @@ uint8_t shunt[] = { 0, 0, 0, 0, 0, 0 };
 volatile uint32_t millis = 0; //Accurate to within ~10% for RC oscillator
 volatile uint8_t timer1_counter = 0;
 
+#define CAPTURE_STEP 1000
+uint32_t capture_time = 0;
+#define LED_LONG_STEP 500
+#define LED_SHORT_STEP 150
+uint32_t led_time = 0;
+uint32_t led_step = 0;
+uint8_t led_index = 0;
+uint8_t led_progress = 0;
+
 void init_io_pins() {
     //setting inputs
     DDRD &= ~(_BV(PD5)); //input 1
@@ -142,7 +151,24 @@ int main (void) {
                 if (ch == 3 || ch == 4) { PORTB &= ~outputs[ch];}
             }
         }
-        _delay_ms(1000);
+
+        if ((millis - led_time) > led_step) {
+            led_time = millis;
+            if ((led_progress > led_index) | !shunt[led_index]) {
+                PORTB &= ~_BV(PB0);
+                led_index = (led_index + 1) % 6;
+                led_progress = 0;
+                led_step = LED_LONG_STEP;
+            } else {
+                if (!(PORTB & _BV(PB0))) {
+                    PORTB |= _BV(PB0);
+                } else {
+                    PORTB &= ~_BV(PB0);
+                    led_progress += 1;
+                }
+                led_step = LED_SHORT_STEP;
+            }
+        }
     }
     return 1;
 }
